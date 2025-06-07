@@ -1,0 +1,259 @@
+// File: CBT_PART_2_QP.java
+import java.util.Random;
+import java.util.Scanner;
+
+public class CBT_PART_2_QP implements Runnable {
+    private final Player player1;
+    private final Player player2;
+    private final Player player3;
+    private final Random random = new Random();
+    boolean gameEnded = false;
+    final Object lock = new Object(); // Central lock
+
+    public CBT_PART_2_QP(String player1Name, String player2Name, String player3Name) {
+        this.player1 = new Player(player1Name, this);
+        this.player2 = new Player(player2Name, this);
+        this.player3 = new Player(player3Name, this);
+    }
+
+    private void dealInitialCards() {
+        int card1 = nextCard();
+        player1.totalScore += card1;
+        System.out.println(player1.name + " takes " + card1 + " (visible)");
+
+        int card2 = nextCard();
+        player2.totalScore += card2;
+        System.out.println(player2.name + " takes " + card2 + " (visible)");
+
+        int card3 = nextCard();
+        player3.totalScore += card3;
+        System.out.println(player3.name + " takes " + card3 + " (visible)");
+    }
+
+    private int nextCard() {
+        return random.nextInt(10) + 1;
+    }
+
+    void playTurn(Player player) {
+        synchronized (lock) {
+            if (player.hasPassed) return;
+            System.out.print(player.name + "'s turn. Current score: " + player.totalScore + ". (1) Take a card or (2) Pass? : ");
+            Scanner scanner = new Scanner(System.in);
+            int choice = scanner.nextInt();
+            if (choice == 1) {
+                player.takeCard();
+            } else {
+                player.pass();
+            }
+            lock.notifyAll();
+        }
+    }
+
+    private void determineWinner() {
+        Player[] players = { player1, player2, player3 };
+        int maxValid = -1;
+        // find max <=21
+        for (Player p : players) {
+            if (p.totalScore <= 21 && p.totalScore > maxValid) {
+                maxValid = p.totalScore;
+            }
+        }
+        int countMax = 0;
+        Player winner = null;
+        for (Player p : players) {
+            if (p.totalScore == maxValid) {
+                countMax++;
+                if (winner == null) winner = p;
+            }
+        }
+        // print scores
+        for (Player p : players) {
+            System.out.println(p.name + " has " + p.totalScore);
+        }
+        if (countMax == 1) {
+            System.out.println(winner.name + " wins with " + winner.totalScore + "!");
+        } else {
+            System.out.println("No one wins.");
+        }
+        gameEnded = true;
+        synchronized (lock) {
+            lock.notifyAll();
+        }
+    }
+
+    public void run() {
+        dealInitialCards();
+        synchronized (lock) {
+            while (!gameEnded) {
+                try {
+                    // wait until all players have passed
+                    boolean allPassed = player1.hasPassed && player2.hasPassed && player3.hasPassed;
+                    if (!allPassed) {
+                        lock.wait();
+                    } else {
+                        determineWinner();
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        CBT_PART_2_QP game = new CBT_PART_2_QP("Alice", "Bob", "Carol");
+        Thread dealerThread = new Thread(game);
+        Thread t1 = new Thread(game.player1);
+        Thread t2 = new Thread(game.player2);
+        Thread t3 = new Thread(game.player3);
+        dealerThread.start();
+        t1.start();
+        t2.start();
+        t3.start();
+    }
+
+    class Player implements Runnable {
+        String name;
+        int hiddenCard;
+        int totalScore;
+        boolean hasPassed = false;
+        CBT_PART_2_QP dealer;
+
+        Player(String name, CBT_PART_2_QP dealer) {
+            this.name = name;
+            this.dealer = dealer;
+            this.hiddenCard = nextCard();
+            this.totalScore = hiddenCard;
+            System.out.println(name + " takes " + hiddenCard + " (hidden)");
+        }
+
+        void takeCard() {
+            int card = nextCard();
+            totalScore += card;
+            System.out.println(name + " takes " + card);
+            if (totalScore > 21) {
+                hasPassed = true;
+                System.out.println(name + " busted and passes.");
+            }
+        }
+
+        void pass() {
+            hasPassed = true;
+            System.out.println(name + " passes.");
+        }
+
+        public void run() {
+            while (true) {
+                synchronized (dealer.lock) {
+                    if (hasPassed || dealer.gameEnded) break;
+                    dealer.playTurn(this);
+                    try {
+                        dealer.lock.wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        }
+    }
+}
+
+// File: RunsComparator.java
+import java.util.Comparator;
+public class RunsComparator implements Comparator<Player> {
+    @Override
+    public int compare(Player p1, Player p2) {
+        return p2.getRuns() - p1.getRuns(); // descending order
+    }
+}
+
+// File: CricketDataHandler.java
+import java.io.*;
+import java.util.*;
+
+public class CricketDataHandler {
+    public List<Player> readPlayersFromFile(String fileName) throws IOException {
+        List<Player> players = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line = br.readLine(); // header
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                String name = parts[0];
+                String role = parts[1];
+                String team = parts[2];
+                int runs = Integer.parseInt(parts[3]);
+                int wickets = Integer.parseInt(parts[4]);
+                players.add(new Player(name, role, team, runs, wickets));
+            }
+        }
+        return players;
+    }
+
+    public void writePlayersToFile(String fileName, List<Player> players) throws IOException {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {
+            bw.write("Name,Role,Team,Runs,Wickets");
+            bw.newLine();
+            for (Player p : players) {
+                bw.write(String.join(",",
+                    p.getName(), p.getRole(), p.getTeam(),
+                    String.valueOf(p.getRuns()), String.valueOf(p.getWickets())));
+                bw.newLine();
+            }
+        }
+    }
+
+    public void updatePlayerStats(List<Player> players, String name, int runs, int wickets) {
+        boolean found = false;
+        for (Player p : players) {
+            if (p.getName().equals(name)) {
+                p.setRuns(p.getRuns() + runs);
+                p.setWickets(p.getWickets() + wickets);
+                found = true;
+                break;
+            }
+        }
+        if (!found) throw new IllegalArgumentException("Player not found: " + name);
+    }
+
+    public double calculateTeamAverageRuns(List<Player> players, String teamName) {
+        int sum = 0, count = 0;
+        for (Player p : players) {
+            if (p.getTeam().equals(teamName)) {
+                sum += p.getRuns();
+                count++;
+            }
+        }
+        if (count == 0) throw new IllegalArgumentException("No players for team: " + teamName);
+        return (double) sum / count;
+    }
+}
+
+// File: TeamFilter.java
+import java.util.*;
+public class TeamFilter {
+    public List<Player> filter(List<Player> players, String teamName) {
+        List<Player> result = new ArrayList<>();
+        for (Player p : players) {
+            if (p.getTeam().equals(teamName)) result.add(p);
+        }
+        return result;
+    }
+}
+
+// File: AllRounderStatsFilter.java
+import java.util.*;
+public class AllRounderStatsFilter {
+    public List<Player> filter(List<Player> players, int minRuns, int minWickets) {
+        List<Player> result = new ArrayList<>();
+        for (Player p : players) {
+            if ("All-Rounder".equalsIgnoreCase(p.getRole()) &&
+                p.getRuns() >= minRuns && p.getWickets() >= minWickets) {
+                result.add(p);
+            }
+        }
+        return result;
+    }
+}
+
+// Note: Assumes existence of a Player class with appropriate getters/setters:
+// class Player { String name, role, team; int runs, wickets; /* constructors + getters/setters */ }
