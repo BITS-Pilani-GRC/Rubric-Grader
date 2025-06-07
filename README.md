@@ -1,4 +1,4 @@
-# llm-grader
+# rubric-grader
 
 A CLI tool and Python package to grade code submissions using LLM-based rubrics and ensemble code evaluation.
 
@@ -8,10 +8,20 @@ A CLI tool and Python package to grade code submissions using LLM-based rubrics 
   - **B**: Two-step rubric-based evaluation.
   - **C**: Ensemble code evaluation (default).
 - Programmatic API via the `eval_submissions()` function.
-- CLI entry point: `llm-grader`.
+- CLI entry point: `rubric-grader`.
 - Example smoke-test script in `test/tester.py`.
 
 ## Installation
+
+### From PyPI
+
+Install the latest released version from PyPI:
+
+```bash
+pip install rubric-grader
+```
+
+### From source (editable)
 
 First, create and activate a virtual environment, then install in editable mode:
 
@@ -20,7 +30,7 @@ First, create and activate a virtual environment, then install in editable mode:
 python3 -m venv llm-env
 source llm-env/bin/activate
 
-# install the package
+# install the package in editable mode
 pip install -e .
 ```
 
@@ -29,13 +39,13 @@ pip install -e .
 ### CLI
 
 ```bash
-llm-grader RUBRIC_FILE MODEL_SOLUTION_FILE PROBLEM_STATEMENT_FILE SUBMISSIONS_DIR [OPTIONS]
+rubric-grader RUBRIC_FILE MODEL_SOLUTION_FILE PROBLEM_STATEMENT_FILE SUBMISSIONS_DIR [OPTIONS]
 ```
 
 Example:
 
 ```bash
-llm-grader test/rubric.txt sol.txt test/rubric.txt test/sub
+rubric-grader test/rubric.txt sol.txt test/rubric.txt test/sub
 ```
 
 Options:
@@ -94,3 +104,19 @@ Inspect `test/tester.py` to see how it imports `eval_submissions()` and sets up 
 ## Contributing
 
 Contributions, issues, and feature requests are welcome. Feel free to open a pull request.
+
+## Publishing to PyPI via GitHub Actions
+
+You can automate publishing to PyPI using GitHub Actions' OpenID Connect (OIDC). Read more about OpenID Connect in GitHub Actions [here](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect).
+
+To configure the PyPI publisher in your repository settings, provide the following information:
+
+| Field               | Required | Value/Example        | Description                                                                                                                                 |
+|---------------------|----------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| PyPI Project Name   | Yes      | `rubric-grader`      | The name of the project on PyPI that will be created when this publisher is used.                                                            |
+| Owner               | Yes      | `arnavthestud`       | The GitHub organization or username that owns this repository.                                                                                |
+| Repository name     | Yes      | `Rubric-Grader`      | The name of the GitHub repository containing the publishing workflow.                                                                         |
+| Workflow name       | Yes      | `workflow.yml`       | The filename of the publishing workflow. This file should exist in the `.github/workflows/` directory in the repository configured above. |
+| Environment name    | No       | `rubric-grader` (optional) | The GitHub Actions environment used for publishing. Configuring a dedicated environment is recommended to restrict access to the PyPI token. |
+
+Ensure that you have a corresponding workflow file in `.github/workflows/` (e.g., `workflow.yml`) and an environment (if used) configured under your repository settings with a secret (e.g., `PYPI_TOKEN`) for package publishing.
