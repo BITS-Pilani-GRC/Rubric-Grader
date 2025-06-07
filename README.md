@@ -23,18 +23,25 @@ pip install rubric-grader
 
 ### From source (editable)
 
-First, create and activate a virtual environment, then install in editable mode:
+To install the latest development version directly from the GitHub repository, clone the repo and install in editable mode:
 
 ```bash
-# create and activate venv (if needed)
-python3 -m venv llm-env
-source llm-env/bin/activate
-
-# install the package in editable mode
+git clone https://github.com/arnavthestud/Rubric-Grader.git
+cd Rubric-Grader
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -e .
 ```
 
 ## Usage
+
+### Environment Variables
+
+Before running the CLI or using the programmatic API, set your OpenAI API key:
+
+```bash
+export OPENAI_API_KEY="your_openai_api_key"
+```
 
 ### CLI
 
@@ -45,7 +52,7 @@ rubric-grader RUBRIC_FILE MODEL_SOLUTION_FILE PROBLEM_STATEMENT_FILE SUBMISSIONS
 Example:
 
 ```bash
-rubric-grader test/rubric.txt sol.txt test/rubric.txt test/sub
+rubric-grader test/rubric.txt test/sol.txt test/prob.txt test/sub
 ```
 
 Options:
@@ -70,8 +77,8 @@ from llm_grader.code_evaluator import eval_submissions
 
 eval_submissions(
     rubric_filepath='test/rubric.txt',
-    model_solution_filepath='sol.txt',
-    problem_statement_filepath='test/rubric.txt',
+    model_solution_filepath='test/sol.txt',
+    problem_statement_filepath='test/prob.txt',
     submissions_dir='test/sub',
     scoring_type='C',      # or 'B'
     output_csv='output/results.csv',
@@ -104,19 +111,3 @@ Inspect `test/tester.py` to see how it imports `eval_submissions()` and sets up 
 ## Contributing
 
 Contributions, issues, and feature requests are welcome. Feel free to open a pull request.
-
-## Publishing to PyPI via GitHub Actions
-
-You can automate publishing to PyPI using GitHub Actions' OpenID Connect (OIDC). Read more about OpenID Connect in GitHub Actions [here](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect).
-
-To configure the PyPI publisher in your repository settings, provide the following information:
-
-| Field               | Required | Value/Example        | Description                                                                                                                                 |
-|---------------------|----------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| PyPI Project Name   | Yes      | `rubric-grader`      | The name of the project on PyPI that will be created when this publisher is used.                                                            |
-| Owner               | Yes      | `arnavthestud`       | The GitHub organization or username that owns this repository.                                                                                |
-| Repository name     | Yes      | `Rubric-Grader`      | The name of the GitHub repository containing the publishing workflow.                                                                         |
-| Workflow name       | Yes      | `workflow.yml`       | The filename of the publishing workflow. This file should exist in the `.github/workflows/` directory in the repository configured above. |
-| Environment name    | No       | `rubric-grader` (optional) | The GitHub Actions environment used for publishing. Configuring a dedicated environment is recommended to restrict access to the PyPI token. |
-
-Ensure that you have a corresponding workflow file in `.github/workflows/` (e.g., `workflow.yml`) and an environment (if used) configured under your repository settings with a secret (e.g., `PYPI_TOKEN`) for package publishing.
