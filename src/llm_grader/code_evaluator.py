@@ -315,7 +315,7 @@ def eval_submissions(rubric_filepath,
                      model_solution_filepath,
                      problem_statement_filepath,
                      submissions_dir,
-                     scoring_type='C',
+                     scoring_type='A',
                      output_csv='results.csv',
                      log_file='evaluation.log',
                      syntaxMarks=5,
@@ -395,11 +395,12 @@ def main():
     parser.add_argument("submissions_dir", help="Directory containing student submissions.")
     parser.add_argument(
         "--scoring_type",
-        choices=["B", "C"],
-        default="C",
+        choices=["A", "B", "C", "D"],
+        default="A",
         help=(
-            "Scoring type: 'B' two-step rubric evaluation or 'C' ensemble code evaluation "
-            "(default: C)."
+            "Scoring type: 'A' one-step rubric evaluation (default), "
+            "'B' two-step rubric evaluation, 'C' ensemble code evaluation, "
+            "or 'D' AI-O one-shot evaluation."
         ),
     )
     parser.add_argument(

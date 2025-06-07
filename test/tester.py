@@ -21,7 +21,7 @@ eval_submissions(
     model_solution_filepath=sol_fp,
     problem_statement_filepath=prob_fp,
     submissions_dir=subs_dir,
-    scoring_type='C',      # or 'B'
+    scoring_type='C',      # or 'B', 'D' (defaults to 'A' if omitted)
     output_csv=os.path.join(output_dir, 'results.csv'),
     log_file=os.path.join(output_dir, 'evaluation.log'),
     syntaxMarks=5,

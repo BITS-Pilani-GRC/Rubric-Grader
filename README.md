@@ -4,9 +4,11 @@ A CLI tool and Python package to grade code submissions using LLM-based rubrics 
 
 ## Features
 
-- Two scoring modes:
+- Scoring modes:
+  - **A**: One-step rubric-based evaluation (default).
   - **B**: Two-step rubric-based evaluation.
-  - **C**: Ensemble code evaluation (default).
+  - **C**: Ensemble code evaluation.
+  - **D**: AI-O one-shot evaluation.
 - Programmatic API via the `eval_submissions()` function.
 - CLI entry point: `rubric-grader`.
 - Example smoke-test script in `test/tester.py`.
@@ -58,7 +60,7 @@ rubric-grader test/rubric.txt test/sol.txt test/prob.txt test/sub
 Options:
 
 ```text
---scoring_type {B,C}         Scoring mode: B = two-step rubric evaluation; C = ensemble code evaluation (default: C)
+--scoring_type {A,B,C,D}    Scoring mode: A = one-step rubric evaluation (default); B = two-step rubric evaluation; C = ensemble code evaluation; D = AI-O one-shot evaluation
 --output_csv OUTPUT_CSV      Path for CSV results (default: results.csv)
 --log_file LOG_FILE          Path for log file (default: evaluation.log)
 --syntaxMarks SYNTAXMARKS    Maximum syntax marks (default: 5)
@@ -80,7 +82,7 @@ eval_submissions(
     model_solution_filepath='test/sol.txt',
     problem_statement_filepath='test/prob.txt',
     submissions_dir='test/sub',
-    scoring_type='C',      # or 'B'
+    scoring_type='C',      # or 'B', 'D' (defaults to 'A' for one-step rubric evaluation if omitted)
     output_csv='output/results.csv',
     log_file='output/evaluation.log',
     syntaxMarks=5,
@@ -103,10 +105,14 @@ Inspect `test/tester.py` to see how it imports `eval_submissions()` and sets up 
 
 ## Scoring Types
 
+- **A: One-step rubric evaluation**
+  Assigns scores based on a single rubric-based prompting phase.
 - **B: Two-step rubric evaluation**
   Uses the rubric file to assign scores in two phases (one-step parsing, then detailed rubric criteria).
 - **C: Ensemble code evaluation**
   Runs an ensemble of LLM queries (default size 5) to judge each submission’s correctness and syntax.
+- **D: AI-O one-shot evaluation**
+  Performs a one-shot evaluation using the AI-O prompt for logical correctness and syntax.
 
 ## Contributing
 
