@@ -20,7 +20,7 @@ A CLI tool and Python package to grade code submissions using LLM-based rubrics 
 Install the latest released version from PyPI:
 
 ```bash
-pip install rubric-grader
+pip install  rubric-grader
 ```
 
 ### From source (editable)
